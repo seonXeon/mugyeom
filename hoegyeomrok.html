@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>回謙錄 · 회겸록</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#cdbb98}
+#pageHost{display:block;width:100%;height:100%;border:0;background:#cdbb98}
+.music{
+  position:fixed;right:18px;bottom:18px;z-index:9999;
+  display:flex;align-items:center;gap:8px;
+}
+.music button{
+  width:48px;height:48px;border-radius:50%;
+  border:1px solid rgba(58,45,28,.42);
+  background:rgba(225,212,184,.92);
+  color:#2d281f;
+  font-family:serif;
+  font-size:18px;
+  cursor:pointer;
+  backdrop-filter:blur(8px);
+}
+.music .label{
+  writing-mode:vertical-rl;
+  padding:8px 5px;
+  background:rgba(225,212,184,.72);
+  color:#5b5144;
+  font-family:serif;
+  font-size:12px;
+  letter-spacing:.16em;
+}
+@media(max-width:760px){.music .label{display:none}}
+</style>
+</head>
+<body>
+<iframe id="pageHost" name="pageHost" src="intro.html" title="회겸록"></iframe>
+
+<div class="music">
+  <div class="label">배경음악</div>
+  <button id="musicBtn" aria-label="배경음악 재생">▶</button>
+</div>
+<audio id="bgm" src="bgm.mp3" preload="auto" loop playsinline></audio>
+
+<script>
+const frame=document.getElementById("pageHost");
+const audio=document.getElementById("bgm");
+const musicBtn=document.getElementById("musicBtn");
+let playing=false;
+
+function setUI(on){
+  playing=on;
+  musicBtn.textContent=on ? "Ⅱ" : "▶";
+  musicBtn.setAttribute("aria-label",on ? "배경음악 일시정지" : "배경음악 재생");
+}
+async function startMusic(){
+  try{
+    await audio.play();
+    setUI(true);
+  }catch(e){
+    setUI(false);
+  }
+}
+musicBtn.addEventListener("click",async()=>{
+  if(playing){
+    audio.pause();
+    setUI(false);
+  }else{
+    await startMusic();
+  }
+});
+
+window.addEventListener("message",async e=>{
+  const data=e.data||{};
+  if(data.type==="hg-start-music"){
+    if(!playing) await startMusic();
+  }
+  if(data.type==="hg-navigate" && typeof data.url==="string"){
+    frame.src=data.url;
+  }
+});
+
+// 주소 해시를 갱신해 뒤로가기 힌트 제공
+frame.addEventListener("load",()=>{
+  try{
+    const path=frame.contentWindow.location.pathname.split("/").pop() || "intro.html";
+    const search=frame.contentWindow.location.search || "";
+    history.replaceState(null,"",`#${path}${search}`);
+  }catch(e){}
+});
+</script>
+</body>
+</html>
